@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RS Techwin Service Delivery Order Form</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Service Delivery Order (SDO) / Service Report</h1>
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <div class="header">            
+            <div class="header-left">
+                <label>Project Site:</label>
+                <input type="text" name="project_site" required><br>
+
+                
+                <label>DO No.:</label>
+                <input type="text" name="do_no" value="{{ do_no }}" readonly><br>
+                
+                <label for="technician">Technician:</label>
+                <select name="technician" required>
+                    <option value="">Select Technician</option>
+                    {% for technician in technicians %}
+                        <option value="{{ technician }}">{{ technician }}</option>
+                    {% endfor %}
+                </select>
+
+                        
+                
+                <label>Task Objective:</label>
+                <input type="text" name="task_objectives" required><br>
+                
+                <label>System Type:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="system_type" value="CCTV"> CCTV</label>
+                    <label><input type="checkbox" name="system_type" value="Door Access"> Door Access</label>
+                    <label><input type="checkbox" name="system_type" value="Lift Access"> Lift Access</label>
+                    <label><input type="checkbox" name="system_type" value="Barrier Gate"> Barrier Gate</label>
+                    <label><input type="checkbox" name="system_type" value="Intercom"> Intercom</label>
+                    <label><input type="checkbox" name="system_type" value="Networking"> Networking</label>
+                    <label><input type="checkbox" name="system_type" value="Others"> Others</label>
+                </div>
+            </div>
+            <div class="header-right">
+                <label>Date:</label>
+                <input type="date" name="date" required><br>
+                
+                <label>Check In-Time:</label>
+                <input type="time" name="check_in_time" required><br>
+                
+                <label>Check Out-Time:</label>
+                <input type="time" name="check_out_time" required><br>
+                
+                <label>Type:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="type" value="Service"> A) Service</label>
+                    <label><input type="checkbox" name="type" value="Installation"> B) Installation</label>
+                    <label><input type="checkbox" name="type" value="Maintenance"> C) Maintenance</label>
+                </div>
+            </div>
+        </div>
+
+        <h2>Work Description</h2>
+        <div class="work-description">
+            {% for i in range(1, 7) %}
+            <div class="scope-item">
+                <h3>Scope {{ i }}</h3>
+                <label>Location:</label>
+                <input type="text" name="scope_{{ i }}_location"><br>
+                
+                <label>Status:</label>
+                <select name="scope_{{ i }}_status">
+                    <option value=" "></option>
+                    <option value="To Be Continue">To Be Continue</option>
+                    <option value="Awaiting Response">Awaiting Response</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select><br>
+                
+                <label>Upload Image for Description:</label>
+                <input type="file" name="scope_{{ i }}_image" accept="image/*"><br><br>
+
+                <label>Description:</label>
+                <textarea name="scope_{{ i }}_description" rows="2"></textarea><br><br>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Materials Delivered to Site</h2>
+        <textarea name="materials" rows="3"></textarea>
+
+        <h2>Special Instruction / Note</h2>
+        <textarea name="special_instructions" rows="3"></textarea>
+
+        <h2>Representative Information</h2>
+        <div class="representative-info">
+            <div class="reported-by">
+                <h3>Reported by</h3>
+                
+                <label for="reported_by">Name:</label>
+                <select name="reported_by" required>
+                    <option value="">Select Reported By</option>
+                    {% for technician in technicians %}
+                        <option value="{{ technician }}">{{ technician }}</option>
+                    {% endfor %}
+                </select><br>
+
+                <label>Signature:</label>
+                <button type="button" class="sign-button" onclick="openSignatureModal('reportedBy')">Sign Here</button>
+                <input type="hidden" name="reported_by_signature">
+            </div>
+
+            <div class="client-signature">
+                <h3>Client's Signature</h3>
+                <label>Name:</label>
+                <input type="text" name="client_name" required><br>
+                <label>Position:</label>
+                <select name="position" required>
+                    <option value=" "></option>
+                    <option value="B. Executive">B. Executive</option>
+                    <option value="B. Manager">B. Manager</option>
+                    <option value="Chargeman">Chargeman</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Management">Management</option>
+                    <option value="Security">Security</option>
+                    <option value="Supervisor">Supervisor</option>
+                </select><br>
+                <label>Signature:</label>
+                <button type="button" class="sign-button" onclick="openSignatureModal('client')">Sign Here</button>
+                <input type="hidden" name="client_signature">
+            </div>
+        </div>
+
+        <button type="submit">Generate PDF</button>
+    </form>
+
+    <!-- Modal for Signature -->
+    <div id="signatureModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSignatureModal()">&times;</span>
+            <h3>Signature Pad</h3>
+            <canvas id="signaturePadCanvas" width="500" height="200"></canvas>
+            <div class="signature-pad-buttons">
+                <button type="button" onclick="clearSignature()">Clear</button>
+                <button type="button" onclick="saveSignature()">Done</button>
+                <button type="button" onclick="cancelSignature()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad"></script>
+    <script>
+        const signaturePad = new SignaturePad(document.getElementById('signaturePadCanvas'));
+        let currentField = '';
+
+        function openSignatureModal(field) {
+            currentField = field;
+            document.getElementById('signatureModal').style.display = 'flex';
+            signaturePad.clear();
+        }
+
+        function closeSignatureModal() {
+            document.getElementById('signatureModal').style.display = 'none';
+        }
+
+        function clearSignature() {
+            signaturePad.clear();
+        }
+
+        function saveSignature() {
+            if (signaturePad.isEmpty()) {
+                alert('Please provide a signature!');
+                return;
+            }
+            const signatureData = signaturePad.toDataURL();
+            if (currentField === 'reportedBy') {
+                document.querySelector("input[name='reported_by_signature']").value = signatureData;
+            } else if (currentField === 'client') {
+                document.querySelector("input[name='client_signature']").value = signatureData;
+            }
+            closeSignatureModal();
+        }
+
+        function cancelSignature() {
+            closeSignatureModal();
+        }
+
+        document.querySelector("form").onsubmit = function () {
+            const reportedBySignature = document.querySelector("input[name='reported_by_signature']").value;
+            const clientSignature = document.querySelector("input[name='client_signature']").value;
+            if (!reportedBySignature || !clientSignature) {
+                alert("Both signatures are required before submission.");
+                return false;
+            }
+        };
+
+        document.querySelectorAll("textarea[name^='scope_'][name$='_description']").forEach(field => {
+            field.addEventListener('blur', () => {
+                const originalText = field.value.trim();
+                if (!originalText) return;
+
+                fetch('/spellcheck', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: originalText })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.corrected && data.corrected !== originalText) {
+                        field.value = data.corrected;
+                    }
+                })
+                .catch(err => console.error("Spell-check error:", err));
+            });
+        });
+
+    </script>
+</body>
+</html>

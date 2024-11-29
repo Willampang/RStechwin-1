@@ -1,0 +1,6 @@
+Flask
+requests
+Pillow
+PyMuPDF
+textblob
+gunicorn

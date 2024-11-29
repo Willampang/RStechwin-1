@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Technicians</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="{{ url_for('manage_pdf') }}">Manage PDF Files</a>
+        <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+    </div>
+    <div id="main">
+        <button class="openbtn" onclick="openNav()">☰</button>
+        <h1>Manage Technicians</h1>
+        <div class="content-box">
+            <table class="technician-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Edit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for technician in technicians %}
+                    <tr>
+                        <td>{{ technician }}</td>
+                        <td>
+                            <form action="/editTechnician" method="post">
+                                <input type="hidden" name="old_name" value="{{ technician }}">
+                                <input type="text" name="new_name" placeholder="Edit name" required>
+                                <button type="submit" class="edit-btn">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="/deleteTechnician" method="post" style="display:inline;">
+                                <input type="hidden" name="name_to_delete" value="{{ technician }}">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <form action="/addTechnician" method="post" class="add-technician-form">
+                <input type="text" name="new_technician" placeholder="Add new technician" required>
+                <button type="submit" class="add-btn">Add</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
+    </script>
+</body>
+</html>
